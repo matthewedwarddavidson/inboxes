@@ -67,7 +67,7 @@ interface GameState {
   init: () => Promise<void>;
   navigate: (screen: Screen) => void;
 
-  startDaily: () => void;
+  startDaily: (date?: Date) => void;
   startFree: (difficulty: Difficulty) => void;
   nextFree: () => void;
 
@@ -227,8 +227,8 @@ export const useGame = create<GameState>((set, get) => {
       set({ screen });
     },
 
-    startDaily() {
-      const { seed, difficulty, dateKey } = dailyFor();
+    startDaily(date) {
+      const { seed, difficulty, dateKey } = dailyFor(date ?? new Date());
       const puzzle = generate(seed, difficulty);
       beginGame(puzzle, 'daily', dateKey);
     },

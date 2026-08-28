@@ -8,6 +8,7 @@ export function Play() {
   const puzzle = useGame((s) => s.puzzle);
   const boxes = useGame((s) => s.boxes);
   const mode = useGame((s) => s.mode);
+  const dailyKey = useGame((s) => s.dailyKey);
   const mistakes = useGame((s) => s.mistakes);
   const elapsedMs = useGame((s) => s.elapsedMs);
   const solved = useGame((s) => s.solved);
@@ -122,7 +123,12 @@ export function Play() {
                   Next puzzle →
                 </button>
               ) : (
-                <button className="btn btn--primary" onClick={startDaily}>
+                <button
+                  className="btn btn--primary"
+                  onClick={() =>
+                    startDaily(dailyKey ? new Date(`${dailyKey}T00:00:00Z`) : undefined)
+                  }
+                >
                   Replay
                 </button>
               )}

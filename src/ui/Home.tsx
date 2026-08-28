@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useGame } from '../store/gameStore';
 import { dailyFor, DIFFICULTIES, type Difficulty } from '../engine';
 import { capitalize } from './format';
+import { DailyCalendar } from './DailyCalendar';
 
 export function Home() {
   const startDaily = useGame((s) => s.startDaily);
@@ -9,9 +10,21 @@ export function Home() {
   const navigate = useGame((s) => s.navigate);
   const defaultDifficulty = useGame((s) => s.settings.defaultDifficulty);
   const stats = useGame((s) => s.stats);
+  const games = useGame((s) => s.games);
 
   const [difficulty, setDifficulty] = useState<Difficulty>(defaultDifficulty);
+  const [showCalendar, setShowCalendar] = useState(false);
   const daily = dailyFor();
+
+  const completedKeys = useMemo(() => {
+    const keys = new Set<string>();
+    for (const g of games) {
+      if (g.mode === 'daily' && g.status === 'won' && g.dailyKey) keys.add(g.dailyKey);
+    }
+    return keys;
+  }, [games]);
+
+  const todayDone = completedKeys.has(daily.dateKey);
 
   return (
     <div className="home">
@@ -21,13 +34,26 @@ export function Home() {
       </header>
 
       <section className="card">
-        <h2>Daily puzzle</h2>
+        <div className="card__head">
+          <h2>Daily puzzle</h2>
+          {todayDone && <span className="tag tag--done">Completed ✓</span>}
+        </div>
         <p className="muted">
           {daily.dateKey} · {capitalize(daily.difficulty)}
         </p>
-        <button className="btn btn--primary" onClick={startDaily}>
-          Play today’s puzzle
+        <button className="btn btn--primary" onClick={() => startDaily()}>
+          {todayDone ? 'Replay today’s puzzle' : 'Play today’s puzzle'}
         </button>
+        <button
+          className="btn btn--subtle calendar-toggle"
+          onClick={() => setShowCalendar((v) => !v)}
+          aria-expanded={showCalendar}
+        >
+          {showCalendar ? 'Hide past puzzles' : 'Play a past puzzle'}
+        </button>
+        {showCalendar && (
+          <DailyCalendar completedKeys={completedKeys} onPick={(date) => startDaily(date)} />
+        )}
       </section>
 
       <section className="card">
