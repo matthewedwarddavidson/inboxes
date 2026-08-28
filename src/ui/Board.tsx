@@ -204,6 +204,19 @@ export function Board({ puzzle, boxes, onAddBox, onRemoveBox, interactive }: Boa
           </g>
         );
       })}
+
+      {/* Drag size total — rendered last so it sits on top of everything */}
+      {preview && (
+        <text
+          x={preview.col0 * CELL + ((preview.col1 - preview.col0 + 1) * CELL) / 2}
+          y={preview.row0 * CELL + ((preview.row1 - preview.row0 + 1) * CELL) / 2}
+          className="board__preview-total"
+          dominantBaseline="central"
+          textAnchor="middle"
+        >
+          {(preview.col1 - preview.col0 + 1) * (preview.row1 - preview.row0 + 1)}
+        </text>
+      )}
     </svg>
   );
 }

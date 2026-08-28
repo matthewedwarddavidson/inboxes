@@ -295,6 +295,17 @@ body {
   stroke-width: 2.5;
   stroke-dasharray: 5 4;
 }
+.board__preview-total {
+  fill: var(--text);
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+  paint-order: stroke;
+  stroke: var(--board-bg);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+}
 .board__clue-bg {
   fill: var(--surface);
   stroke: var(--border);
