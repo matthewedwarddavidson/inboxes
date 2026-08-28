@@ -6,6 +6,7 @@ import {
   type Puzzle,
   type Rect,
 } from '../engine';
+import { colorForValue } from './colors';
 
 const CELL = 40;
 const STROKE = 2;
@@ -138,7 +139,20 @@ export function Board({ puzzle, boxes, onAddBox, onRemoveBox, interactive }: Boa
       {/* Committed boxes */}
       {boxes.map((box, i) => {
         const evalResult = evaluateBox(box, clues, boxes);
-        const status = evalResult.overlaps ? 'invalid' : evalResult.state;
+        const area = (box.row1 - box.row0 + 1) * (box.col1 - box.col0 + 1);
+        const clue = evalResult.clue;
+        const invalid = evalResult.overlaps || !clue || area > clue.value;
+        const complete = !invalid && !!clue && area === clue.value;
+        const color = clue ? colorForValue(clue.value) : null;
+        const style =
+          !invalid && color
+            ? {
+                fill: color.fill,
+                stroke: color.stroke,
+                fillOpacity: complete ? 0.92 : 0.5,
+              }
+            : undefined;
+        const status = invalid ? 'invalid' : complete ? 'complete' : 'partial';
         return (
           <rect
             key={i}
@@ -146,8 +160,9 @@ export function Board({ puzzle, boxes, onAddBox, onRemoveBox, interactive }: Boa
             y={box.row0 * CELL + STROKE}
             width={(box.col1 - box.col0 + 1) * CELL - STROKE * 2}
             height={(box.row1 - box.row0 + 1) * CELL - STROKE * 2}
-            rx={4}
+            rx={5}
             className={`board__box board__box--${status}`}
+            style={style}
           />
         );
       })}
@@ -173,9 +188,16 @@ export function Board({ puzzle, boxes, onAddBox, onRemoveBox, interactive }: Boa
         const satisfied =
           box !== undefined &&
           (box.row1 - box.row0 + 1) * (box.col1 - box.col0 + 1) === clue.value;
+        const color = colorForValue(clue.value);
         return (
           <g key={`clue${i}`} className={`board__clue ${satisfied ? 'board__clue--done' : ''}`}>
-            <circle cx={cx} cy={cy} r={CELL * 0.38} className="board__clue-bg" />
+            <circle
+              cx={cx}
+              cy={cy}
+              r={CELL * 0.38}
+              className="board__clue-bg"
+              style={{ fill: satisfied ? color.stroke : undefined, stroke: color.stroke }}
+            />
             <text x={cx} y={cy} className="board__clue-text" dominantBaseline="central" textAnchor="middle">
               {clue.value}
             </text>

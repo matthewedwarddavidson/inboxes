@@ -94,8 +94,8 @@ export function Play() {
       </div>
 
       <p className="play__hint muted">
-        Drag to draw a box. Tap a box to remove it. Each box must hold one number equal to
-        its area.
+        Drag to draw a box — drawing over existing boxes redraws them. Tap a box to remove
+        it. Each box must hold one number equal to its area.
       </p>
 
       {solved && (

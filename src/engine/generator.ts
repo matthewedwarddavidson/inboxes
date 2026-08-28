@@ -23,61 +23,117 @@ import {
 
 interface DifficultyParams {
   minLeaf: number; // minimum area of a leaf rectangle
-  maxLeaf: number; // soft maximum area; larger pieces keep splitting
-  stopBias: number; // probability of stopping once area <= maxLeaf
+  maxLeaf: number; // hard maximum area; larger pieces always keep splitting
+  maxStrip: number; // longest 1-wide sliver allowed (enables prime values like 5, 7, 11)
+  sizeBias: number; // draws taken as the stop threshold's max (higher => bigger boxes)
+  centerBias: number; // draws averaged for the cut point (higher => squarer boxes)
+  thinChance: number; // chance to take a short-strip cut (source of 2s and 3s)
   cluePlacement: 'center' | 'random';
 }
 
+// We make "chunky" cuts (both sides >= 2 thick) or "strip" cuts (a 1-wide sliver
+// up to `maxStrip` long). Allowing longer strips reintroduces prime box sizes
+// (5, 7, 11), which can only exist as 1xN strips, while `thinChance` keeps them
+// occasional so the board stays chunky rather than a mess of thin strips. Each
+// region stops splitting once its area is <= a random threshold (max of
+// `sizeBias` draws), biasing box sizes toward the larger end.
 const PARAMS: Record<Difficulty, DifficultyParams> = {
-  easy: { minLeaf: 2, maxLeaf: 4, stopBias: 0.78, cluePlacement: 'center' },
-  medium: { minLeaf: 2, maxLeaf: 6, stopBias: 0.55, cluePlacement: 'center' },
-  hard: { minLeaf: 3, maxLeaf: 9, stopBias: 0.4, cluePlacement: 'random' },
-  expert: { minLeaf: 3, maxLeaf: 12, stopBias: 0.28, cluePlacement: 'random' },
+  easy: { minLeaf: 2, maxLeaf: 6, maxStrip: 5, sizeBias: 2, centerBias: 3, thinChance: 0.33, cluePlacement: 'center' },
+  medium: { minLeaf: 2, maxLeaf: 8, maxStrip: 7, sizeBias: 2, centerBias: 3, thinChance: 0.3, cluePlacement: 'center' },
+  hard: { minLeaf: 2, maxLeaf: 10, maxStrip: 9, sizeBias: 2, centerBias: 2, thinChance: 0.28, cluePlacement: 'random' },
+  expert: { minLeaf: 2, maxLeaf: 12, maxStrip: 12, sizeBias: 3, centerBias: 2, thinChance: 0.26, cluePlacement: 'random' },
 };
 
 const MAX_TILING_ATTEMPTS = 60;
 const CLUE_TRIES_PER_TILING = 8;
 
-/** Recursively split a rectangle into leaves honoring min/max leaf area. */
+/** Pick a cut offset, biased toward the center for squarer pieces. */
+function pickCut(cuts: number[], span: number, rng: Rng, centerBias: number): number {
+  const mid = span / 2;
+  let best = cuts[rng.int(0, cuts.length - 1)];
+  let bestDist = Math.abs(best - mid);
+  for (let i = 1; i < centerBias; i++) {
+    const cand = cuts[rng.int(0, cuts.length - 1)];
+    const dist = Math.abs(cand - mid);
+    if (dist < bestDist) {
+      best = cand;
+      bestDist = dist;
+    }
+  }
+  return best;
+}
+
+/** Choose which orientation to cut, preferring the longer dimension. */
+function preferVertical(w: number, h: number, rng: Rng): boolean {
+  const bias = w > h ? 0.78 : w < h ? 0.22 : 0.5;
+  return rng.next() < bias;
+}
+
+/** Recursively split a rectangle into leaves with a varied size distribution. */
 function splitRect(rect: Rect, rng: Rng, p: DifficultyParams, out: Rect[]): void {
   const w = rect.col1 - rect.col0 + 1;
   const h = rect.row1 - rect.row0 + 1;
   const area = w * h;
 
-  // Enumerate cut offsets that keep both halves >= minLeaf.
-  const vCuts: number[] = []; // vertical cut => split columns at offset k
+  // Classify cut offsets. "Chunky" cuts leave both sides >= 2 thick in the cut
+  // dimension. "Thin" cuts peel a 1-wide sliver, allowed only while the sliver
+  // stays within maxStrip so strips don't get arbitrarily long.
+  const vChunky: number[] = [];
+  const vThin: number[] = [];
   for (let k = 1; k < w; k++) {
-    if (h * k >= p.minLeaf && h * (w - k) >= p.minLeaf) vCuts.push(k);
+    if (h * k < p.minLeaf || h * (w - k) < p.minLeaf) continue;
+    if (k >= 2 && w - k >= 2) vChunky.push(k);
+    else if (h <= p.maxStrip) vThin.push(k); // sliver is h long
   }
-  const hCuts: number[] = []; // horizontal cut => split rows at offset k
+  const hChunky: number[] = [];
+  const hThin: number[] = [];
   for (let k = 1; k < h; k++) {
-    if (w * k >= p.minLeaf && w * (h - k) >= p.minLeaf) hCuts.push(k);
+    if (w * k < p.minLeaf || w * (h - k) < p.minLeaf) continue;
+    if (k >= 2 && h - k >= 2) hChunky.push(k);
+    else if (w <= p.maxStrip) hThin.push(k); // sliver is w long
   }
 
-  const splittable = vCuts.length > 0 || hCuts.length > 0;
-  if (!splittable) {
+  const hasChunky = vChunky.length > 0 || hChunky.length > 0;
+  const hasThin = vThin.length > 0 || hThin.length > 0;
+
+  // Nothing can be cut acceptably (e.g. a 1x3 or 3x3 nub) => it's a leaf.
+  if (!hasChunky && !hasThin) {
     out.push(rect);
     return;
   }
 
-  // Decide whether to stop splitting.
-  if (area <= p.maxLeaf && rng.next() < p.stopBias) {
+  // Random per-region target: stop once the region is at or below it.
+  let stopThreshold = p.minLeaf;
+  for (let i = 0; i < p.sizeBias; i++) {
+    const draw = rng.int(p.minLeaf, p.maxLeaf);
+    if (draw > stopThreshold) stopThreshold = draw;
+  }
+  if (area <= stopThreshold) {
     out.push(rect);
     return;
   }
 
-  // Choose orientation. Bias slightly toward cutting the longer dimension so
-  // pieces don't become extreme strips too often.
+  // Prefer chunky cuts; occasionally take a short-strip cut for small boxes.
+  const useThin = hasChunky ? hasThin && rng.next() < p.thinChance : true;
+
   let cutVertical: boolean;
-  if (vCuts.length === 0) cutVertical = false;
-  else if (hCuts.length === 0) cutVertical = true;
-  else {
-    const preferVertical = w > h ? 0.62 : w < h ? 0.38 : 0.5;
-    cutVertical = rng.next() < preferVertical;
+  let cuts: number[];
+  if (useThin) {
+    if (vThin.length === 0) cutVertical = false;
+    else if (hThin.length === 0) cutVertical = true;
+    else cutVertical = preferVertical(w, h, rng);
+    cuts = cutVertical ? vThin : hThin;
+  } else {
+    if (vChunky.length === 0) cutVertical = false;
+    else if (hChunky.length === 0) cutVertical = true;
+    else cutVertical = preferVertical(w, h, rng);
+    cuts = cutVertical ? vChunky : hChunky;
   }
+
+  const span = cutVertical ? w : h;
+  const k = pickCut(cuts, span, rng, p.centerBias);
 
   if (cutVertical) {
-    const k = rng.pick(vCuts);
     splitRect(
       { row0: rect.row0, col0: rect.col0, row1: rect.row1, col1: rect.col0 + k - 1 },
       rng,
@@ -91,7 +147,6 @@ function splitRect(rect: Rect, rng: Rng, p: DifficultyParams, out: Rect[]): void
       out,
     );
   } else {
-    const k = rng.pick(hCuts);
     splitRect(
       { row0: rect.row0, col0: rect.col0, row1: rect.row0 + k - 1, col1: rect.col1 },
       rng,

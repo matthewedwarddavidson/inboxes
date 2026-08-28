@@ -1,4 +1,25 @@
 :root {
+  /* Papery beige (default / light) */
+  --bg: #efe5d0;
+  --surface: #fbf6ea;
+  --surface-2: #ece0c9;
+  --text: #423a2b;
+  --muted: #8a7d64;
+  --primary: #cf7a52;
+  --primary-ink: #fff8f0;
+  --border: #e2d5bc;
+
+  --board-bg: #fcf8ee;
+  --grid: #e7dcc5;
+  --box-invalid: rgba(207, 90, 90, 0.22);
+  --box-invalid-stroke: #cf6b6b;
+  --preview: rgba(120, 140, 175, 0.22);
+  --preview-stroke: #7d94b5;
+
+  --danger: #cf6b6b;
+}
+
+:root[data-theme='dark'] {
   --bg: #12121e;
   --surface: #1c1c2e;
   --surface-2: #262640;
@@ -8,27 +29,14 @@
   --primary-ink: #0b1030;
   --border: #333350;
 
-  --box-complete: rgba(90, 200, 120, 0.28);
-  --box-complete-stroke: #4cc46a;
-  --box-partial: rgba(255, 200, 90, 0.22);
-  --box-partial-stroke: #e0af4a;
+  --board-bg: #1c1c2e;
+  --grid: #333350;
   --box-invalid: rgba(255, 90, 110, 0.24);
   --box-invalid-stroke: #e05a6e;
   --preview: rgba(108, 140, 255, 0.28);
   --preview-stroke: #6c8cff;
 
   --danger: #e05a6e;
-}
-
-:root[data-theme='light'] {
-  --bg: #f4f5fb;
-  --surface: #ffffff;
-  --surface-2: #eef0f8;
-  --text: #1a1a2e;
-  --muted: #6a6a86;
-  --primary: #3a5cf0;
-  --primary-ink: #ffffff;
-  --border: #d8dbe8;
 }
 
 * {
@@ -261,22 +269,21 @@ body {
   user-select: none;
 }
 .board__bg {
-  fill: var(--surface);
+  fill: var(--board-bg);
 }
 .board__grid {
-  stroke: var(--border);
+  stroke: var(--grid);
   stroke-width: 1;
 }
 .board__box {
   stroke-width: 2.5;
+  transition: fill-opacity 0.15s ease;
 }
 .board__box--complete {
-  fill: var(--box-complete);
-  stroke: var(--box-complete-stroke);
+  stroke-width: 3;
 }
 .board__box--partial {
-  fill: var(--box-partial);
-  stroke: var(--box-partial-stroke);
+  stroke-dasharray: 6 4;
 }
 .board__box--invalid {
   fill: var(--box-invalid);
@@ -289,20 +296,17 @@ body {
   stroke-dasharray: 5 4;
 }
 .board__clue-bg {
-  fill: var(--surface-2);
+  fill: var(--surface);
   stroke: var(--border);
-  stroke-width: 1;
+  stroke-width: 1.5;
 }
-.board__clue--done .board__clue-bg {
-  fill: var(--primary);
+.board__clue--done .board__clue-text {
+  fill: #fff;
 }
 .board__clue-text {
   fill: var(--text);
   font-size: 18px;
   font-weight: 800;
-}
-.board__clue--done .board__clue-text {
-  fill: var(--primary-ink);
 }
 
 /* Overlay */

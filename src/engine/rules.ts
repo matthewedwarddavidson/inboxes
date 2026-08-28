@@ -41,15 +41,14 @@ export function evaluateBox(box: Rect, clues: Clue[], others: Rect[]): BoxEvalua
 
 /**
  * A "mistake" for scoring purposes: a committed box that can never be part of a
- * solution — it overlaps another box, contains zero or multiple clues, or has
- * the wrong area for the single clue it contains.
+ * solution — it contains no clue, contains more than one clue, or is already
+ * larger than the single clue's value. A box smaller than its clue is treated
+ * as in-progress (the player may redraw it larger), not a mistake.
  */
-export function isMistakeBox(box: Rect, clues: Clue[], others: Rect[]): boolean {
-  const evalResult = evaluateBox(box, clues, others);
-  if (evalResult.overlaps) return true;
-  if (evalResult.state === 'invalid') return true;
-  if (evalResult.state === 'partial') return true;
-  return false;
+export function isMistakeBox(box: Rect, clues: Clue[]): boolean {
+  const inside = cluesInside(box, clues);
+  if (inside.length !== 1) return true;
+  return rectArea(box) > inside[0].value;
 }
 
 /** True once the drawn boxes form a valid, complete solution to the puzzle. */

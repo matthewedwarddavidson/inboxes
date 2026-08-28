@@ -39,19 +39,29 @@ describe('isMistakeBox', () => {
     { row: 2, col: 2, value: 2 },
   ];
 
-  it('is a mistake when area is wrong (partial)', () => {
-    const box: Rect = { row0: 0, col0: 0, row1: 0, col1: 0 }; // area 1 != 2
-    expect(isMistakeBox(box, clues, [box])).toBe(true);
+  it('is a mistake when the box is bigger than its clue', () => {
+    const box: Rect = { row0: 0, col0: 0, row1: 1, col1: 1 }; // area 4 > 2
+    expect(isMistakeBox(box, clues)).toBe(true);
   });
 
   it('is a mistake when two clues inside', () => {
     const box: Rect = { row0: 0, col0: 0, row1: 2, col1: 2 };
-    expect(isMistakeBox(box, clues, [box])).toBe(true);
+    expect(isMistakeBox(box, clues)).toBe(true);
   });
 
-  it('is not a mistake when complete and non-overlapping', () => {
-    const box: Rect = { row0: 0, col0: 0, row1: 0, col1: 1 };
-    expect(isMistakeBox(box, clues, [box])).toBe(false);
+  it('is a mistake when no clue inside', () => {
+    const box: Rect = { row0: 3, col0: 3, row1: 3, col1: 3 };
+    expect(isMistakeBox(box, clues)).toBe(true);
+  });
+
+  it('is not a mistake when partial (smaller than its clue)', () => {
+    const box: Rect = { row0: 0, col0: 0, row1: 0, col1: 0 }; // area 1 < 2
+    expect(isMistakeBox(box, clues)).toBe(false);
+  });
+
+  it('is not a mistake when it exactly matches its clue', () => {
+    const box: Rect = { row0: 0, col0: 0, row1: 0, col1: 1 }; // area 2 == 2
+    expect(isMistakeBox(box, clues)).toBe(false);
   });
 });
 

@@ -235,8 +235,9 @@ them, but hints are deliberately out of scope for the initial build.
 ### 8.1 Board interaction
 - Render grid as SVG; clue numbers centered in their cells.
 - **Draw a box**: press/drag from one corner to the opposite corner; release to commit a
-  rectangle. Tap an existing box to select; drag edges to resize; tap-and-hold or a delete
-  affordance to remove.
+  rectangle. **Drawing a box over existing boxes redraws them** — any overlapped boxes are
+  removed and replaced by the new one (Economist-style), so there's no need to erase first.
+  Tap a box to remove it.
 - Live feedback:
   - Box turns valid/complete color when its area matches the single clue inside it.
   - Conflicts (overlap, no clue, two clues, wrong area) shown in an error color.
@@ -293,8 +294,10 @@ mistakePenalty ≈ 0.05                                 // 5% per mistake, clamp
 
 Notes:
 - `base[difficulty]` and `targetMs` are constants we can tune from real play data later.
-- A **mistake** = committing an invalid box (overlaps another box, contains zero or
-  multiple clues, or has the wrong area). We can debounce so a single bad drag counts once.
+- A **mistake** = committing a box that can never be part of the solution: it contains no
+  clue, contains more than one clue, or is already larger than its single clue's value. A
+  box smaller than its clue is treated as in-progress (not a mistake), since the player may
+  redraw it larger. Overlaps aren't mistakes — drawing over a box redraws it.
 - The formula lives in `engine/score.ts` and is pure/unit-tested, so it's easy to retune.
 - We store raw `durationMs` + `mistakes` on every `GameRecord`, so scores can be
   **recomputed retroactively** if we change the formula.

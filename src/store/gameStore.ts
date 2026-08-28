@@ -33,12 +33,12 @@ const DEFAULT_SETTINGS: Settings = {
   id: 'settings',
   defaultDifficulty: 'easy',
   autoCheck: true,
-  theme: 'dark',
+  theme: 'light',
 };
 
 export interface AddBoxResult {
   ok: boolean;
-  reason?: 'overlap';
+  replaced?: boolean;
 }
 
 interface GameState {
@@ -249,12 +249,11 @@ export const useGame = create<GameState>((set, get) => {
     addBox(rect) {
       const s = get();
       if (!s.puzzle || s.solved) return { ok: false };
-      // Reject overlapping placements outright.
-      if (s.boxes.some((b) => rectsOverlap(b, rect))) {
-        return { ok: false, reason: 'overlap' };
-      }
-      const nextBoxes = [...s.boxes, rect];
-      const mistake = isMistakeBox(rect, s.puzzle.clues, nextBoxes);
+      // Economist-style redraw: a new box replaces any boxes it overlaps.
+      const remaining = s.boxes.filter((b) => !rectsOverlap(b, rect));
+      const replaced = remaining.length !== s.boxes.length;
+      const nextBoxes = [...remaining, rect];
+      const mistake = isMistakeBox(rect, s.puzzle.clues);
       set({
         history: [...s.history, s.boxes],
         future: [],
@@ -267,7 +266,7 @@ export const useGame = create<GameState>((set, get) => {
       } else {
         void saveCurrent();
       }
-      return { ok: true };
+      return { ok: true, replaced };
     },
 
     removeBoxAt(index) {
