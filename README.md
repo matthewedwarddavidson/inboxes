@@ -9,6 +9,10 @@ I was enjoying The Economist's daily "inboxes" game but wanted a few more featur
 The game is [Shikaku](https://en.wikipedia.org/wiki/Shikaku): partition the
 8×12 grid into rectangles so each contains exactly one number equal to its area.
 
+<p align="center">
+  <img src="docs/example-game.png" alt="A completed inboxes board partitioned into coloured rectangles, each labelled with its area" width="360" />
+</p>
+
 ## How puzzles are generated
 
 Every puzzle is produced deterministically from a numeric **seed**. The engine
