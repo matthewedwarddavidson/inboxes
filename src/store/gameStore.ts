@@ -6,7 +6,6 @@ import {
   computeScore,
   dailyFor,
   generate,
-  isMistakeBox,
   isSolved,
   rectsOverlap,
   type Difficulty,
@@ -281,12 +280,13 @@ export const useGame = create<GameState>((set, get) => {
       const remaining = s.boxes.filter((b) => !rectsOverlap(b, rect));
       const replaced = remaining.length !== s.boxes.length;
       const nextBoxes = [...remaining, rect];
-      const mistake = isMistakeBox(rect, s.puzzle.clues);
+      // Redrawing over an existing box means the earlier box was wrong, so it
+      // counts as a mistake.
       set({
         history: [...s.history, s.boxes],
         future: [],
         boxes: nextBoxes,
-        mistakes: s.mistakes + (mistake ? 1 : 0),
+        mistakes: s.mistakes + (replaced ? 1 : 0),
       });
 
       if (isSolved(nextBoxes, s.puzzle)) {
