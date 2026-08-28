@@ -328,6 +328,15 @@ body {
   font-size: 12px;
   font-weight: 700;
 }
+.badge--review {
+  background: var(--box-complete, #bfe4c1);
+  border-color: #78bc84;
+  color: #2f6b3d;
+}
+.play__review-note {
+  text-align: center;
+  margin-bottom: 12px;
+}
 .play__stats {
   display: flex;
   gap: 12px;

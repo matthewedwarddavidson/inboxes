@@ -6,6 +6,7 @@ import { DailyCalendar } from './DailyCalendar';
 
 export function Home() {
   const startDaily = useGame((s) => s.startDaily);
+  const viewSolution = useGame((s) => s.viewSolution);
   const startFree = useGame((s) => s.startFree);
   const navigate = useGame((s) => s.navigate);
   const defaultDifficulty = useGame((s) => s.settings.defaultDifficulty);
@@ -41,9 +42,20 @@ export function Home() {
         <p className="muted">
           {daily.dateKey} · {capitalize(daily.difficulty)}
         </p>
-        <button className="btn btn--primary" onClick={() => startDaily()}>
-          {todayDone ? 'Replay today’s puzzle' : 'Play today’s puzzle'}
-        </button>
+        {todayDone ? (
+          <>
+            <button className="btn btn--primary" onClick={() => viewSolution()}>
+              View solution
+            </button>
+            <button className="btn btn--subtle" onClick={() => startDaily()}>
+              Replay today’s puzzle
+            </button>
+          </>
+        ) : (
+          <button className="btn btn--primary" onClick={() => startDaily()}>
+            Play today’s puzzle
+          </button>
+        )}
         <button
           className="btn btn--subtle calendar-toggle"
           onClick={() => setShowCalendar((v) => !v)}
@@ -52,7 +64,10 @@ export function Home() {
           {showCalendar ? 'Hide past puzzles' : 'Play a past puzzle'}
         </button>
         {showCalendar && (
-          <DailyCalendar completedKeys={completedKeys} onPick={(date) => startDaily(date)} />
+          <DailyCalendar
+            completedKeys={completedKeys}
+            onPick={(date, done) => (done ? viewSolution(date) : startDaily(date))}
+          />
         )}
       </section>
 

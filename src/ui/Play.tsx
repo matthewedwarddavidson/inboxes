@@ -12,6 +12,7 @@ export function Play() {
   const mistakes = useGame((s) => s.mistakes);
   const elapsedMs = useGame((s) => s.elapsedMs);
   const solved = useGame((s) => s.solved);
+  const review = useGame((s) => s.review);
   const running = useGame((s) => s.running);
 
   const addBox = useGame((s) => s.addBox);
@@ -58,19 +59,26 @@ export function Play() {
         <div className="play__meta">
           <span className="badge">{mode === 'daily' ? 'Daily' : 'Free'}</span>
           <span className="badge">{capitalize(puzzle.difficulty)}</span>
+          {review && <span className="badge badge--review">Solution</span>}
         </div>
       </header>
 
-      <div className="play__stats">
-        <div className="pill">
-          <span className="pill__label">Time</span>
-          <span className="pill__value">{formatDuration(elapsedMs)}</span>
+      {review ? (
+        <p className="play__review-note muted">
+          Completed board{dailyKey ? ` for ${dailyKey}` : ''}.
+        </p>
+      ) : (
+        <div className="play__stats">
+          <div className="pill">
+            <span className="pill__label">Time</span>
+            <span className="pill__value">{formatDuration(elapsedMs)}</span>
+          </div>
+          <div className="pill">
+            <span className="pill__label">Mistakes</span>
+            <span className="pill__value">{mistakes}</span>
+          </div>
         </div>
-        <div className="pill">
-          <span className="pill__label">Mistakes</span>
-          <span className="pill__value">{mistakes}</span>
-        </div>
-      </div>
+      )}
 
       <div className="play__board-wrap">
         <Board
@@ -78,26 +86,44 @@ export function Play() {
           boxes={boxes}
           onAddBox={addBox}
           onRemoveBox={removeBoxAt}
-          interactive={!solved}
+          interactive={!solved && !review}
         />
       </div>
 
-      <div className="play__controls">
-        <button className="btn" onClick={undo} disabled={!canUndo || solved}>
-          Undo
-        </button>
-        <button className="btn" onClick={redo} disabled={!canRedo || solved}>
-          Redo
-        </button>
-        <button className="btn" onClick={clearBoxes} disabled={boxes.length === 0 || solved}>
-          Clear
-        </button>
-      </div>
+      {review ? (
+        <div className="play__controls">
+          <button
+            className="btn btn--primary"
+            onClick={() =>
+              startDaily(dailyKey ? new Date(`${dailyKey}T00:00:00Z`) : undefined)
+            }
+          >
+            Replay this puzzle
+          </button>
+          <button className="btn" onClick={() => navigate('home')}>
+            Home
+          </button>
+        </div>
+      ) : (
+        <>
+          <div className="play__controls">
+            <button className="btn" onClick={undo} disabled={!canUndo || solved}>
+              Undo
+            </button>
+            <button className="btn" onClick={redo} disabled={!canRedo || solved}>
+              Redo
+            </button>
+            <button className="btn" onClick={clearBoxes} disabled={boxes.length === 0 || solved}>
+              Clear
+            </button>
+          </div>
 
-      <p className="play__hint muted">
-        Drag to draw a box — drawing over existing boxes redraws them. Tap a box to remove
-        it. Each box must hold one number equal to its area.
-      </p>
+          <p className="play__hint muted">
+            Drag to draw a box — drawing over existing boxes redraws them. Tap a box to remove
+            it. Each box must hold one number equal to its area.
+          </p>
+        </>
+      )}
 
       {solved && (
         <div className="overlay">

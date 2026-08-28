@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32" role="img" aria-label="Inboxes">
+  <rect width="32" height="32" rx="6" fill="#efe5d0"/>
+  <g stroke-width="1.1">
+    <!-- top-left 2x2: mint -->
+    <rect x="3" y="3" width="12" height="12" rx="2" fill="#bfe4c1" stroke="#78bc84"/>
+    <!-- top-right upper 2x1: coral -->
+    <rect x="17" y="3" width="12" height="5" rx="2" fill="#f6c9c2" stroke="#d9887b"/>
+    <!-- top-right lower 2x1: apricot -->
+    <rect x="17" y="10" width="12" height="5" rx="2" fill="#f8dcb4" stroke="#d9a663"/>
+    <!-- bottom-left left 1x2: sky -->
+    <rect x="3" y="17" width="5" height="12" rx="2" fill="#bcd9ef" stroke="#78a8d0"/>
+    <!-- bottom-left right 1x2: lavender -->
+    <rect x="10" y="17" width="5" height="12" rx="2" fill="#d7c7ed" stroke="#9d85c9"/>
+    <!-- bottom-right 2x2: rose -->
+    <rect x="17" y="17" width="12" height="12" rx="2" fill="#f3c6d8" stroke="#cf7ea0"/>
+  </g>
+</svg>

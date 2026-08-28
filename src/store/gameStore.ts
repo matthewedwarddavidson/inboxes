@@ -58,6 +58,7 @@ interface GameState {
   elapsedMs: number;
   running: boolean;
   solved: boolean;
+  review: boolean;
   recordId: string | null;
 
   settings: Settings;
@@ -68,6 +69,7 @@ interface GameState {
   navigate: (screen: Screen) => void;
 
   startDaily: (date?: Date) => void;
+  viewSolution: (date?: Date) => void;
   startFree: (difficulty: Difficulty) => void;
   nextFree: () => void;
 
@@ -126,6 +128,7 @@ export const useGame = create<GameState>((set, get) => {
       elapsedMs: 0,
       running: true,
       solved: false,
+      review: false,
       recordId: newRecordId(),
       screen: 'play',
     });
@@ -184,6 +187,7 @@ export const useGame = create<GameState>((set, get) => {
     elapsedMs: 0,
     running: false,
     solved: false,
+    review: false,
     recordId: null,
     settings: DEFAULT_SETTINGS,
     stats: emptyStats(),
@@ -218,6 +222,7 @@ export const useGame = create<GameState>((set, get) => {
           elapsedMs: saved.elapsedMs,
           running: false,
           solved: false,
+          review: false,
           recordId: newRecordId(),
         });
       }
@@ -231,6 +236,29 @@ export const useGame = create<GameState>((set, get) => {
       const { seed, difficulty, dateKey } = dailyFor(date ?? new Date());
       const puzzle = generate(seed, difficulty);
       beginGame(puzzle, 'daily', dateKey);
+    },
+
+    viewSolution(date) {
+      const { seed, difficulty, dateKey } = dailyFor(date ?? new Date());
+      const puzzle = generate(seed, difficulty);
+      // Read-only review: show the canonical solved board without a timer,
+      // recording, or touching any in-progress saved game.
+      set({
+        puzzle,
+        mode: 'daily',
+        dailyKey: dateKey,
+        boxes: puzzle.solution,
+        history: [],
+        future: [],
+        mistakes: 0,
+        startedAt: Date.now(),
+        elapsedMs: 0,
+        running: false,
+        solved: false,
+        review: true,
+        recordId: null,
+        screen: 'play',
+      });
     },
 
     startFree(difficulty) {
@@ -321,8 +349,9 @@ export const useGame = create<GameState>((set, get) => {
     abandon() {
       const s = get();
       set({ running: false });
-      if (s.puzzle && !s.solved) void clearSavedGame();
-      set({ screen: 'home' });
+      // Don't discard a real in-progress saved game when leaving review mode.
+      if (s.puzzle && !s.solved && !s.review) void clearSavedGame();
+      set({ screen: 'home', review: false });
     },
 
     async updateSettings(patch) {

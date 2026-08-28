@@ -3,7 +3,7 @@ import { utcDateKey } from '../engine';
 
 interface DailyCalendarProps {
   completedKeys: Set<string>;
-  onPick: (date: Date) => void;
+  onPick: (date: Date, done: boolean) => void;
 }
 
 const WEEKDAYS = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
@@ -92,7 +92,7 @@ export function DailyCalendar({ completedKeys, onPick }: DailyCalendarProps) {
                 .filter(Boolean)
                 .join(' ')}
               disabled={isFuture}
-              onClick={() => onPick(new Date(Date.UTC(view.year, view.month, day)))}
+              onClick={() => onPick(new Date(Date.UTC(view.year, view.month, day)), done)}
               aria-label={`${key}${done ? ', completed' : ''}`}
             >
               {day}
