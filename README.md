@@ -36,8 +36,6 @@ This keeps things simple and serverless:
 - `src/store/` — Zustand game state plus IndexedDB persistence and stats.
 - `src/ui/` — React UI: home, board, stats, and settings screens.
 
-See [DESIGN.md](DESIGN.md) for the design and build plan.
-
 ## Local development
 
 <details>
